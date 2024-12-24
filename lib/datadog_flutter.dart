@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:datadog_flutter/src/platform/active_platform.dart';
 import 'package:datadog_flutter/src/tracking_consent.dart';
 import 'package:datadog_flutter/src/channel.dart';
 export 'package:datadog_flutter/src/tracking_consent.dart';
@@ -43,13 +45,13 @@ class DatadogFlutter {
   static Future<void> setUserInfo({
     String? id,
     String? email,
-    Map<String, dynamic>? extraInfo,
+    Map<String, dynamic> extraInfo = const <String, dynamic>{},
     String? name,
   }) async {
     return await channel.invokeMethod('setUserInfo', {
       'id': id,
       'email': email,
-      'extraInfo': extraInfo,
+      'extraInfo': platform.isIOS ? jsonEncode(extraInfo) : extraInfo,
       'name': name,
     });
   }

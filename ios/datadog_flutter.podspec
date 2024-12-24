@@ -4,20 +4,25 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'datadog_flutter'
-  s.version          = '0.0.1'
+  s.version          = '0.0.4'
   s.summary          = 'Log to Datadog from Flutter.'
   s.description      = <<-DESC
 Log to Datadog from Flutter.
                        DESC
-  s.homepage         = 'https://greenbits.com'
+  s.homepage         = 'https://dutchie.com'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Greenbits' => 'tshedor@greenbits.com' }
+  s.author           = { 'Dutchie' => 'tim.shedor@dutchie.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
 
+  s.static_framework = true
+
   # https://github.com/flutter/flutter/issues/17978
-  s.dependency 'DatadogSDK', '>= 1.5.0'
+  s.dependency 'DatadogSDK', '>= 1.8.0'
+  # https://github.com/GetDutchie/datadog_flutter/issues/99
+  s.dependency 'DatadogSDKCrashReporting', '>= 1.8.0'
+  s.dependency 'AnyCodable-FlightSchool', '~> 0.6.0'
 end

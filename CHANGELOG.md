@@ -1,4 +1,80 @@
-## Unreleased
+## This Package is DEPRECATED
+
+This package has been deprecated in favor of [the official Datadog Flutter SDK](https://pub.dev/packages/datadog_flutter_plugin). Please see [the announcement](https://github.com/GetDutchie/datadog_flutter/issues/108) or skip ahead to [the new, official repo](https://github.com/DataDog/dd-sdk-flutter).
+
+## 2.0.0
+
+* Make `context` available in Android
+* **BREAKING CHANGE** Remove support for Flutter 1.12 to add support Flutter 3 on Android. This only affects apps using Flutter <1.12.
+* **BREAKING CHANGE** Android logs that were mapped under `Level.fine` and below are now mapped as "debug" instead of "verbose." Similarly, `Level.INFO` is now mapped to "info" instead of "debug." Log levels for Android and iOS that were `Level.SHOUT` are now mapped to "debug." While this change does not affect Flutter implementations it will affect how your logs are ingested by Datadog. (#96)
+* **BREAKING CHANGE** A new pod for iOS was introduced for Crash Reporting. In order to use this pod, make sure `DatadogSDKCrashReporting` appears in your `podfile.lock`. If it does not, remove `datadog_flutter` from your `pubspec.yaml` and run `flutter pub get`. Then readd it and run `flutter pub get; pushd ios; bundle exec pod install --repo-update; popd`.
+
+## 2.0.0-beta.4
+
+* Make `context` available in Android
+
+## 2.0.0-beta.2
+
+* **BREAKING CHANGE** Remove support for Flutter 1.12 to add support Flutter 3 on Android. This only affects apps using Flutter <1.12.
+
+## 2.0.0-beta.1
+
+* **BREAKING CHANGE** Android logs that were mapped under `Level.fine` and below are now mapped as "debug" instead of "verbose." Similarly, `Level.INFO` is now mapped to "info" instead of "debug." Log levels for Android and iOS that were `Level.SHOUT` are now mapped to "debug." While this change does not affect Flutter implementations it will affect how your logs are ingested by Datadog. (#96)
+* **BREAKING CHANGE** A new pod for iOS was introduced for Crash Reporting. In order to use this pod, make sure `DatadogSDKCrashReporting` appears in your `podfile.lock`. If it does not, remove `datadog_flutter` from your `pubspec.yaml` and run `flutter pub get`. Then readd it and run `flutter pub get; pushd ios; bundle exec pod install --repo-update; popd`.
+
+## 1.7.4
+
+* Support Flutter 3 on Android
+
+## 1.7.3+2
+
+* Revert native crash reporting support for iOS (restores 1.7.2) (#99)
+
+## 1.7.3+1
+
+* Fixes crash for missing pod `DatadogSDKCrashReporting` (#99)
+
+## 1.7.3
+
+* Adds native crash reporting support on iOS (#92)
+
+## 1.7.2
+
+* Permit non-`http.Request` requests to be sent through `DatadogTracingHttpClient` (#93)
+
+## 1.7.1
+
+* Fix empty `extraInfo` exception on iOS (#89)
+
+## 1.7.0
+
+* Fix incorrectly named key for `extraInfo` on `DatadogFlutter#setUserInfo` in iOS (#84)
+* Bump minimum Datadog SDK to 1.11.1. Related to [DataDog/dd-sdk-android#709](https://github.com/DataDog/dd-sdk-android/issues/709) (#85)
+
+## 1.6.0
+
+* Acknowledge `extraInfo` arguments for Flutter Web users (#76)
+* Resolve `Platform` determination for web (#77)
+
+## 1.5.2
+
+* Nested arrays and nested maps in attributes are supported on iOS (#62)
+* **BREAKING CHANGE** all attribute maps have been updated from `Map<String, dynamic>` to `Map<String, Object>`. These `Map`s no longer support nullable values.
+
+## 1.5.1
+
+* Rollback minimum Datadog Flutter Android to 1.8.1 (#72)
+* Rollback minimum Datadog Flutter iOS to 1.5.0 (#72)
+
+## 1.5.0
+
+* Update Kotlin to [reflect requried minimum version](https://docs.flutter.dev/release/breaking-changes/kotlin-version) (#68)
+* Update Datadog Flutter Android to 1.11.1
+* Update Datadog Flutter iOS to 1.9.0
+
+## 1.4.1
+
+* Uppercases `kind` for `startResourceLoading` and `stopResourceLoading` on Android (#66)
 
 ## 1.4.0
 

@@ -2,6 +2,8 @@ import Flutter
 import UIKit
 import Datadog
 import Foundation
+import AnyCodable
+import DatadogCrashReporting
 
 public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
   private var loggers: [String: Logger] = [:]
@@ -44,7 +46,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
       case "loggerLog":
         let logLevel = args!["level"] as! String
         let logMessage = args!["message"] as! String
-        let attributes = encodeAttributes(args?["attributes"] as? [AttributeKey : Any])
+        let attributes = encodeAttributes(args?["attributes"] as? String)
 
         switch logLevel {
           case "debug":
@@ -103,7 +105,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
           return result(false)
         }
 
-        let attributes = args?["attributes"] as? Dictionary<String, Encodable>
+        let attributes = args?["attributes"] as? String
         if attributes?.isEmpty ?? true {
           Global.rum.startResourceLoading(resourceKey: key, httpMethod: rumMethod, urlString: url)
         } else {
@@ -111,7 +113,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
             resourceKey: key,
             httpMethod: rumMethod,
             urlString: url,
-            attributes: attributes!
+            attributes: encodeAttributes(attributes!)!
           )
         }
         result(true)
@@ -121,7 +123,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
           return result(false)
         }
 
-        let attributes = args?["attributes"] as? Dictionary<String, Encodable>
+        let attributes = args?["attributes"] as? String
         if let errorMessage = args?["errorMessage"] as? String {
           if attributes?.isEmpty ?? true {
             Global.rum.stopResourceLoadingWithError(
@@ -132,7 +134,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
             Global.rum.stopResourceLoadingWithError(
               resourceKey: key,
               errorMessage: errorMessage,
-              attributes: attributes!
+              attributes: encodeAttributes(attributes!)!
             )
           }
         } else {
@@ -149,7 +151,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
                 resourceKey: key,
                 statusCode: args?["statusCode"] as? Int,
                 kind: resourceType,
-                attributes: attributes!
+                attributes: encodeAttributes(attributes!)!
               )
             }
           }
@@ -177,7 +179,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
 
       case "rumAddUserAction" :
         let type = numberToRumActionType(args?["type"] as? NSNumber)
-        let attributes = encodeAttributes(args?["attributes"] as? [AttributeKey : Any])
+        let attributes = encodeAttributes(args?["attributes"] as? String)
         if attributes?.isEmpty ?? true {
           Global.rum.addUserAction(
             type: type,
@@ -198,7 +200,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
 
       case "rumStartUserAction":
         let type = numberToRumActionType(args?["type"] as? NSNumber)
-        let attributes = encodeAttributes(args?["attributes"] as? [AttributeKey : Any])
+        let attributes = encodeAttributes(args?["attributes"] as? String)
         if attributes?.isEmpty ?? true {
           Global.rum.startUserAction(
             type: type,
@@ -219,7 +221,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
 
       case "rumStopUserAction":
         let type = numberToRumActionType(args?["type"] as? NSNumber)
-        let attributes = encodeAttributes(args?["attributes"] as? [AttributeKey : Any])
+        let attributes = encodeAttributes(args?["attributes"] as? String)
         if attributes?.isEmpty ?? true {
           Global.rum.stopUserAction(
             type: type,
@@ -239,12 +241,12 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
         result(true)
 
       case "setUserInfo":
-        let attributes = encodeAttributes(args?["attributes"] as? [AttributeKey : Any])
+        let extraInfo = encodeAttributes(args?["extraInfo"] as? String)
         Datadog.setUserInfo(
           id: args?["id"] as? String,
           name: args?["name"] as? String,
           email: args?["email"] as? String,
-          extraInfo: attributes ?? [AttributeKey : AttributeValue]()
+          extraInfo: extraInfo ?? [AttributeKey : AttributeValue]()
         )
         result(true)
 
@@ -301,7 +303,7 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
         rumApplicationID: rumApplicationId!,
         clientToken: clientToken,
         environment: environment
-      )
+      ).enableCrashReporting(using: DDCrashReportingPlugin())
     } else {
       config = Datadog.Configuration.builderUsing(
         clientToken: clientToken,
@@ -317,35 +319,15 @@ public class SwiftDatadogFlutterPlugin: NSObject, FlutterPlugin {
     return config
   }
 
-  // Flutter sends ints, bools, and doubles as NSNumer
-  // but NSNumber does not conform to Encodable, so the number must
-  // be converted back to an Encodable format
-  private func encodeAttributes(_ attributes: [AttributeKey : Any]?) -> [AttributeKey : AttributeValue]? {
-    guard var unencodedAttributes = attributes else {
+  private func encodeAttributes(_ json: String?) -> [AttributeKey : AttributeValue]? {
+    guard let strongJson = json else {
       return nil
     }
-    for key in unencodedAttributes.keys {
-      let value = unencodedAttributes[key]
-      if value is NSNumber {
-        // (decimals will be lost with Int so Double is used.
-        unencodedAttributes[key] = value as? Double
 
-      // Since bools are NSNumbers in platform channel, boolean
-      // attributes are 1 or 0; however, this could be intended as a
-      // number so documentation will encourage sending the boolean
-      // as a string and recasting from it
-      } else if value as? String == "true" {
-        unencodedAttributes[key] = true
-      } else if value as? String == "false" {
-        unencodedAttributes[key] = false
-      } else if value is String {
-        unencodedAttributes[key] = value as? String
-      } else if value is [String : Any] {
-        unencodedAttributes[key] = encodeAttributes(value as? [AttributeKey : Any])
-      }
-    }
-    return unencodedAttributes as? [AttributeKey : AttributeValue]
+    let decoder = JSONDecoder()
+    return try! decoder.decode([String: AnyCodable].self, from: strongJson.data(using: .utf8)!) as [AttributeKey : AttributeValue]
   }
+
 
   private func getLogger(_ args: [String : Any?]?) -> Logger? {
     guard let identifier = args?["identifier"] as? String else {
